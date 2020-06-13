@@ -1,4 +1,4 @@
-module github.com/jung-kurt/gofpdf
+module github.com/deelawn/gofpdf
 
 go 1.12
 
