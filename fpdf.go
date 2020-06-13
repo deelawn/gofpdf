@@ -2587,6 +2587,8 @@ func (f *Fpdf) SplitLines(txt []byte, w float64) [][]byte {
 //
 // h indicates the line height of each cell in the unit of measure specified in New().
 //
+// liens indicates how many cells this multicell should create -- no more, no less
+//
 // Note: this method has a known bug that treats UTF-8 fonts differently than
 // non-UTF-8 fonts. With UTF-8 fonts, all trailing newlines in txtStr are
 // removed. With a non-UTF-8 font, if txtStr has one or more trailing newlines,
@@ -2595,7 +2597,7 @@ func (f *Fpdf) SplitLines(txt []byte, w float64) [][]byte {
 // applications that use UTF-8 fonts and depend on having all trailing newlines
 // removed should call strings.TrimRight(txtStr, "\r\n") before calling this
 // method.
-func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool) {
+func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool, lines int) {
 	if f.err != nil {
 		return
 	}
@@ -2658,6 +2660,26 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 			}
 		}
 	}
+
+	// Wrapper function to keep track of how many cells (lines) have been written
+	rowsAdded := new(int)
+	writeCell := func(
+		f *Fpdf,
+		w,
+		h float64,
+		txtStr,
+		borderStr string,
+		ln int,
+		alignStr string,
+		fill bool,
+		link int,
+		linkStr string,
+		rowsAdded *int,
+	) {
+		f.CellFormat(w, h, txtStr, borderStr, ln, alignStr, fill, link, linkStr)
+		*rowsAdded++
+	}
+
 	sep := -1
 	i := 0
 	j := 0
@@ -2665,7 +2687,7 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 	ls := 0
 	ns := 0
 	nl := 1
-	for i < nb {
+	for i < nb && *rowsAdded < (lines-1) {
 		// Get next character
 		var c rune
 		if f.isCurrentUTF8 {
@@ -2689,9 +2711,9 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 						newAlignStr = "L"
 					}
 				}
-				f.CellFormat(w, h, string(srune[j:i]), b, 2, newAlignStr, fill, 0, "")
+				writeCell(f, w, h, string(srune[j:i]), b, 2, newAlignStr, fill, 0, "", rowsAdded)
 			} else {
-				f.CellFormat(w, h, s[j:i], b, 2, alignStr, fill, 0, "")
+				writeCell(f, w, h, s[j:i], b, 2, alignStr, fill, 0, "", rowsAdded)
 			}
 			i++
 			sep = -1
@@ -2729,9 +2751,9 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 					f.out("0 Tw")
 				}
 				if f.isCurrentUTF8 {
-					f.CellFormat(w, h, string(srune[j:i]), b, 2, alignStr, fill, 0, "")
+					writeCell(f, w, h, string(srune[j:i]), b, 2, alignStr, fill, 0, "", rowsAdded)
 				} else {
-					f.CellFormat(w, h, s[j:i], b, 2, alignStr, fill, 0, "")
+					writeCell(f, w, h, s[j:i], b, 2, alignStr, fill, 0, "", rowsAdded)
 				}
 			} else {
 				if alignStr == "J" {
@@ -2743,9 +2765,9 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 					f.outf("%.3f Tw", f.ws*f.k)
 				}
 				if f.isCurrentUTF8 {
-					f.CellFormat(w, h, string(srune[j:sep]), b, 2, alignStr, fill, 0, "")
+					writeCell(f, w, h, string(srune[j:sep]), b, 2, alignStr, fill, 0, "", rowsAdded)
 				} else {
-					f.CellFormat(w, h, s[j:sep], b, 2, alignStr, fill, 0, "")
+					writeCell(f, w, h, s[j:sep], b, 2, alignStr, fill, 0, "", rowsAdded)
 				}
 				i = sep + 1
 			}
@@ -2761,12 +2783,14 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 			i++
 		}
 	}
+
 	// Last chunk
 	if f.ws > 0 {
 		f.ws = 0
 		f.out("0 Tw")
 	}
-	if len(borderStr) > 0 && strings.Contains(borderStr, "B") {
+
+	if strings.Contains(borderStr, "B") && *rowsAdded == lines-1 {
 		b += "B"
 	}
 	if f.isCurrentUTF8 {
@@ -2777,10 +2801,24 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 				alignStr = ""
 			}
 		}
-		f.CellFormat(w, h, string(srune[j:i]), b, 2, alignStr, fill, 0, "")
+		writeCell(f, w, h, string(srune[j:]), b, 2, alignStr, fill, 0, "", rowsAdded)
 	} else {
-		f.CellFormat(w, h, s[j:i], b, 2, alignStr, fill, 0, "")
+		writeCell(f, w, h, s[j:], b, 2, alignStr, fill, 0, "", rowsAdded)
 	}
+
+	// Add any filler lines
+	if *rowsAdded < lines {
+		for *rowsAdded < (lines - 1) {
+			writeCell(f, w, h, "", b, 2, alignStr, fill, 0, "", rowsAdded)
+		}
+
+		// And the last row with the border
+		if strings.Contains(borderStr, "B") {
+			b += "B"
+		}
+		writeCell(f, w, h, "", b, 2, alignStr, fill, 0, "", rowsAdded)
+	}
+
 	f.x = f.lMargin
 }
 
