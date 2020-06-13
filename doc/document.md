@@ -274,7 +274,7 @@ for file attachments and annotations.
 [godoc]: https://godoc.org/github.com/deelawn/gofpdf
 [gofpdf-fork]: https://techgaun.github.io/active-forks/index.html#deelawn/gofpdf
 [issue109]: https://github.com/deelawn/gofpdf/issues/109
-[jung]: https://github.com/jung-kurt/
+[jung]: https://github.com/deelawn/gofpdf/
 [last-commit]: https://github.com/deelawn/gofpdf/commit/603f56990463f011cb1dbb64ef7f872c1adc009a
 [license]: https://raw.githubusercontent.com/deelawn/gofpdf/master/LICENSE
 [lint]: https://github.com/golang/lint
