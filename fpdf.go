@@ -2790,9 +2790,12 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 		f.out("0 Tw")
 	}
 
+	// If only one more line left to add with text, set the bottom border (if specified)
+	// and add the line.
 	if strings.Contains(borderStr, "B") && *rowsAdded == lines-1 {
 		b += "B"
 	}
+
 	if f.isCurrentUTF8 {
 		if alignStr == "J" {
 			if f.isRTL {
@@ -2806,8 +2809,17 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 		writeCell(f, w, h, s[j:], b, 2, alignStr, fill, 0, "", rowsAdded)
 	}
 
+	// Now either all lines have been added or there are one or more left to be added.
+	// After the first line is added, b gets set to b2, removing the top border if one
+	// exists. This normally happens inside the loop:
+	//     for i < nb && *rowsAdded < (lines-1)...
+	// but if the first line is added outside the loop, then this must be set here.
+	b = b2
+
 	// Add any filler lines
 	if *rowsAdded < lines {
+
+		// Add all remaining lines except the very last line
 		for *rowsAdded < (lines - 1) {
 			writeCell(f, w, h, "", b, 2, alignStr, fill, 0, "", rowsAdded)
 		}
