@@ -385,7 +385,7 @@ type Pdf interface {
 	Link(x, y, w, h float64, link int)
 	Ln(h float64)
 	MoveTo(x, y float64)
-	MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool)
+	MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool, lines int)
 	Ok() bool
 	OpenLayerPane()
 	OutputAndClose(w io.WriteCloser) error

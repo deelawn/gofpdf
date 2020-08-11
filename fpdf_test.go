@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"testing"
@@ -157,7 +158,7 @@ func TestIssue0209SplitLinesEqualMultiCell(t *testing.T) {
 	lines := pdf.SplitLines([]byte(str), 26)
 	_, FontSize := pdf.GetFontSize()
 	y_start := pdf.GetY()
-	pdf.MultiCell(26, FontSize, str, "", "L", false)
+	pdf.MultiCell(26, FontSize, str, "", "L", false, 0)
 	y_end := pdf.GetY()
 
 	if len(lines) != 1 {
@@ -171,7 +172,7 @@ func TestIssue0209SplitLinesEqualMultiCell(t *testing.T) {
 	str = "Guiochini Amandine"
 	lines = pdf.SplitLines([]byte(str), 26)
 	y_start = pdf.GetY()
-	pdf.MultiCell(26, FontSize, str, "", "L", false)
+	pdf.MultiCell(26, FontSize, str, "", "L", false, 0)
 	y_end = pdf.GetY()
 
 	if len(lines) != 2 {
@@ -394,7 +395,7 @@ func ExampleFpdf_MultiCell() {
 		// Times 12
 		pdf.SetFont("Times", "", 12)
 		// Output justified text
-		pdf.MultiCell(0, 5, string(txtStr), "", "", false)
+		pdf.MultiCell(0, 5, string(txtStr), "", "", false, 0)
 		// Line break
 		pdf.Ln(-1)
 		// Mention in italics
@@ -453,7 +454,7 @@ func ExampleFpdf_SetLeftMargin() {
 		// Font
 		pdf.SetFont("Times", "", 12)
 		// Output text in a 6 cm width column
-		pdf.MultiCell(60, 5, string(txtStr), "", "", false)
+		pdf.MultiCell(60, 5, string(txtStr), "", "", false, 0)
 		pdf.Ln(-1)
 		// Mention
 		pdf.SetFont("", "I", 0)
@@ -938,7 +939,7 @@ func ExampleFpdf_SetAcceptPageBreakFunc() {
 			pdf.Image(example.ImageFile("golang-gopher.png"),
 				-1, 0, colWd, 0, true, "", 0, "")
 		}
-		pdf.MultiCell(colWd, 5, loremStr, "", "", false)
+		pdf.MultiCell(colWd, 5, loremStr, "", "", false, 0)
 		pdf.Ln(-1)
 	}
 	fileStr := example.Filename("Fpdf_SetAcceptPageBreakFunc_landscape")
@@ -1191,7 +1192,7 @@ func ExampleFpdf_ClipText() {
 		0.25, 0.75, 0.25, 0.75, 0.5)
 	pdf.SetXY(5, y-5)
 	pdf.SetFont("Times", "", 12)
-	pdf.MultiCell(130, 5, lorem(), "", "", false)
+	pdf.MultiCell(130, 5, lorem(), "", "", false, 0)
 	pdf.ClipEnd()
 
 	y += 30
@@ -1201,7 +1202,7 @@ func ExampleFpdf_ClipText() {
 		0.25, 0.75, 0.25, 0.75, 0.5)
 	pdf.SetXY(5, y-5)
 	pdf.SetFont("Times", "", 12)
-	pdf.MultiCell(130, 5, lorem(), "", "", false)
+	pdf.MultiCell(130, 5, lorem(), "", "", false, 0)
 	pdf.ClipEnd()
 
 	fileStr := example.Filename("Fpdf_ClipText")
@@ -1634,13 +1635,13 @@ func ExampleFpdf_CellFormat_codepage() {
 	tr := pdf.UnicodeTranslatorFromDescriptor("") // "" defaults to "cp1252"
 	write := func(str string) {
 		// pdf.CellFormat(190, ht, tr(str), "", 1, "C", false, 0, "")
-		pdf.MultiCell(190, ht, tr(str), "", "C", false)
+		pdf.MultiCell(190, ht, tr(str), "", "C", false, 0)
 		pdf.Ln(ht)
 	}
 	pdf.AddPage()
 	str := `Gofpdf provides a translator that will convert any UTF-8 code point ` +
 		`that is present in the specified code page.`
-	pdf.MultiCell(190, ht, str, "", "L", false)
+	pdf.MultiCell(190, ht, str, "", "L", false, 0)
 	pdf.Ln(2 * ht)
 	write("Voix ambiguë d'un cœur qui au zéphyr préfère les jattes de kiwi.")
 	write("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.")
@@ -1790,7 +1791,7 @@ func ExampleFpdf_RegisterImageReader() {
 	pdf.AddPage()
 	pdf.SetFont("Helvetica", "", fontSize)
 	ln := pdf.PointConvert(fontSize)
-	pdf.MultiCell(wd-margin-margin, ln, msgStr, "", "L", false)
+	pdf.MultiCell(wd-margin-margin, ln, msgStr, "", "L", false, 0)
 	rsp, err = http.Get(urlStr)
 	if err == nil {
 		tp = pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
@@ -1884,7 +1885,7 @@ func ExampleFpdf_Beziergon() {
 		jPrev = j
 		srcPrev = src
 	}
-	pdf.MultiCell(wd-margin-margin, ln, msgStr, "", "C", false)
+	pdf.MultiCell(wd-margin-margin, ln, msgStr, "", "C", false, 0)
 	pdf.SetDashPattern([]float64{0.8, 0.8}, 0)
 	pdf.SetDrawColor(160, 160, 160)
 	pdf.Polygon(srcList, "D")
@@ -2210,7 +2211,7 @@ func ExampleFpdf_Rect() {
 		for i, txt := range row {
 			width := cols[i]
 			pdf.Rect(x, y, width, height, "")
-			pdf.MultiCell(width, lineHt+marginCell, txt, "", "", false)
+			pdf.MultiCell(width, lineHt+marginCell, txt, "", "", false, 0)
 			x += width
 			pdf.SetXY(x, y)
 		}
@@ -2586,7 +2587,7 @@ func ExampleFpdf_TransformRotate() {
 	pdf.AddPage()
 	pdf.SetFont("Arial", "", 8)
 	for j := 0; j < 25; j++ {
-		pdf.MultiCell(0, lineHt, loremStr, "", "L", false)
+		pdf.MultiCell(0, lineHt, loremStr, "", "L", false, 0)
 	}
 
 	fileStr := example.Filename("Fpdf_RotateText")
@@ -2617,18 +2618,18 @@ func ExampleFpdf_AddUTF8Font() {
 	if err == nil {
 
 		pdf.SetFont("dejavu", "B", 17)
-		pdf.MultiCell(100, 8, "Text in different languages :", "", "C", false)
+		pdf.MultiCell(100, 8, "Text in different languages :", "", "C", false, 0)
 		pdf.SetFont("dejavu", "", 14)
-		pdf.MultiCell(100, 5, string(txtStr), "", "C", false)
+		pdf.MultiCell(100, 5, string(txtStr), "", "C", false, 0)
 		pdf.Ln(15)
 
 		txtStr, err = ioutil.ReadFile(example.TextFile("utf-8test2.txt"))
 		if err == nil {
 
 			pdf.SetFont("dejavu", "BI", 17)
-			pdf.MultiCell(100, 8, "Greek text with alignStr = \"J\":", "", "C", false)
+			pdf.MultiCell(100, 8, "Greek text with alignStr = \"J\":", "", "C", false, 0)
 			pdf.SetFont("dejavu", "I", 14)
-			pdf.MultiCell(100, 5, string(txtStr), "", "J", false)
+			pdf.MultiCell(100, 5, string(txtStr), "", "J", false, 0)
 			err = pdf.OutputFileAndClose(fileStr)
 
 		}
@@ -2843,11 +2844,12 @@ func TestMultiCellUnsupportedChar(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Println(string(debug.Stack()))
 			t.Errorf("unexpected panic: %v", r)
 		}
 	}()
 
-	pdf.MultiCell(0, 5, "😀", "", "", false)
+	pdf.MultiCell(0, 5, "😀", "", "", false, 0)
 
 	fileStr := example.Filename("TestMultiCellUnsupportedChar")
 	pdf.OutputFileAndClose(fileStr)
