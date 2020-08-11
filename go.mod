@@ -1,4 +1,4 @@
-module github.com/deelawn/gofpdf
+module github.com/deelawn/gofpdf/v3
 
 go 1.12
 
