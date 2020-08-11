@@ -2597,9 +2597,34 @@ func (f *Fpdf) SplitLines(txt []byte, w float64) [][]byte {
 // applications that use UTF-8 fonts and depend on having all trailing newlines
 // removed should call strings.TrimRight(txtStr, "\r\n") before calling this
 // method.
-func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool, lines int) {
+func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill bool, lines int, skipBlankLines bool) {
 	if f.err != nil {
 		return
+	}
+
+	// First, process txtStr to remove any blank lines if skipBlankLines == true
+	if skipBlankLines {
+
+		var newTxtStr, tmpTxtStr string
+		var startIdx int
+
+		// At first glance, it seems it would be easiest to call strings.Split on the '\n' char, process them, and
+		// rejoin them into one string again, but the below approach is probably more efficient, especially for
+		// larger strings.
+		for i := 0; i < len(txtStr); i++ {
+			if txtStr[i] == '\n' {
+				tmpTxtStr = txtStr[startIdx:i]
+				if len(strings.Fields(tmpTxtStr)) != 0 {
+					newTxtStr += tmpTxtStr + "\n"
+				}
+				startIdx = i + 1
+			}
+		}
+		// Append the leftover chars at the end of txtStr
+		if startIdx < len(txtStr) {
+			newTxtStr += txtStr[startIdx:]
+		}
+		txtStr = newTxtStr
 	}
 	// dbg("MultiCell")
 	if alignStr == "" {
@@ -2687,7 +2712,7 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 	ls := 0
 	ns := 0
 	nl := 1
-	for i < nb && *rowsAdded < (lines-1) {
+	for i < nb && (*rowsAdded < (lines-1) || lines == -1) {
 		// Get next character
 		var c rune
 		if f.isCurrentUTF8 {
@@ -2792,7 +2817,7 @@ func (f *Fpdf) MultiCell(w, h float64, txtStr, borderStr, alignStr string, fill 
 
 	// If only one more line left to add with text, set the bottom border (if specified)
 	// and add the line.
-	if strings.Contains(borderStr, "B") && *rowsAdded == lines-1 {
+	if strings.Contains(borderStr, "B") && (*rowsAdded == lines-1 || lines == -1) {
 		b += "B"
 	}
 
