@@ -282,6 +282,7 @@ func (f *Fpdf) RollbackTx() {
 
 	copyTxBuffers(&f.buffer, &f.restoreBuffer, &f.pages, &f.restorePages)
 
+	f.page = len(f.pages) - 1
 	f.inTx = false
 }
 
