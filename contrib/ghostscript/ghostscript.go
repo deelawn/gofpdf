@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/deelawn/gofpdf"
+	"github.com/deelawn/gofpdf/v3"
 )
 
 func report(fileStr string, err error) {

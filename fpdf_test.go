@@ -33,9 +33,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deelawn/gofpdf"
-	"github.com/deelawn/gofpdf/internal/example"
-	"github.com/deelawn/gofpdf/internal/files"
+	"github.com/deelawn/gofpdf/v3"
+	"github.com/deelawn/gofpdf/v3/internal/example"
+	"github.com/deelawn/gofpdf/v3/internal/files"
 )
 
 func init() {
@@ -1569,7 +1569,7 @@ func ExampleFpdf_CellFormat_align() {
 				pdf.CellFormat(170, 257, rec.txt, borderStr, 0, rec.align, false, 0, linkStr)
 				borderStr = ""
 			}
-			linkStr = "https://github.com/deelawn/gofpdf"
+			linkStr = "https://github.com/deelawn/gofpdf/v3"
 		}
 	}
 	pdf := gofpdf.New("P", "mm", "A4", "") // A4 210.0 x 297.0

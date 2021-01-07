@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deelawn/gofpdf"
+	"github.com/deelawn/gofpdf/v3"
 )
 
 func errPrintf(fmtStr string, args ...interface{}) {
