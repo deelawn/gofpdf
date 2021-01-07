@@ -509,8 +509,11 @@ type Fpdf struct {
 	importedObjPos   map[string]map[int]string  // imported template objects hashes and their positions (gofpdi)
 	importedTplObjs  map[string]string          // imported template names and IDs (hashed) (gofpdi)
 	importedTplIDs   map[string]int             // imported template ids hash to object id int (gofpdi)
+	inTx             bool                       // a true value indicates a transaction is in progress
 	buffer           fmtBuffer                  // buffer holding in-memory PDF
+	restoreBuffer    fmtBuffer                  // buffer is restored from this in a tx rollback
 	pages            []*bytes.Buffer            // slice[page] of page content; 1-based
+	restorePages     []*bytes.Buffer            // pages is restored from this in a tx rollback
 	state            int                        // current document state
 	compress         bool                       // compression flag
 	k                float64                    // scale factor (number of points in user unit)

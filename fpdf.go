@@ -253,6 +253,55 @@ func (f *Fpdf) Err() bool {
 	return f.err != nil
 }
 
+// BeginTx begins a transaction for writing to the PDF. It can be finalized with a call to CommmitTx() or
+// cancelled with a call to RollbackTx(). A call to this function is a no-op if a transaction is in progress.
+func (f *Fpdf) BeginTx() {
+
+	if f.inTx {
+		return
+	}
+
+	copyTxBuffers(&f.restoreBuffer, &f.buffer, &f.restorePages, &f.pages)
+
+	f.inTx = true
+}
+
+// CommitTx commits writes that have been made to the pdf since BeginTX() was called. The writes can't
+// be rolled back after this. A call to this function is a no-op if no transaction is in progress.
+func (f *Fpdf) CommitTx() {
+	f.inTx = false
+}
+
+// RollbackTx will restore the pdfs buffer and page values to what they were when the transaction began.
+// A call to this function is a no-op if no transaction is in progress.
+func (f *Fpdf) RollbackTx() {
+
+	if !f.inTx {
+		return
+	}
+
+	copyTxBuffers(&f.buffer, &f.restoreBuffer, &f.pages, &f.restorePages)
+
+	f.inTx = false
+}
+
+// coptyTxBuffers is generic to copy values; don't bother checking for nil
+// pointers since it is only called from BeginTx and RollbackTx so it should
+// not happen.
+func copyTxBuffers(dst1, src1 *fmtBuffer, dst2, src2 *[]*bytes.Buffer) {
+
+	*dst1 = fmtBuffer{*bytes.NewBufferString(src1.String())}
+	*dst2 = make([]*bytes.Buffer, len(*src2))
+	for i, b := range *src2 {
+		// If pages are one based, the first might be nil, so continue
+		if b == nil {
+			continue
+		}
+
+		(*dst2)[i] = bytes.NewBufferString(b.String())
+	}
+}
+
 // ClearError unsets the internal Fpdf error. This method should be used with
 // care, as an internal error condition usually indicates an unrecoverable
 // problem with the generation of a document. It is intended to deal with cases
