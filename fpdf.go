@@ -261,7 +261,16 @@ func (f *Fpdf) BeginTx() {
 		return
 	}
 
-	copyTxBuffers(&f.restoreBuffer, &f.buffer, &f.restorePages, &f.pages)
+	copyTxBuffers(
+		&f.restoreBuffer,
+		&f.buffer,
+		&f.restorePages,
+		&f.pages,
+		&f.restoreX,
+		&f.x,
+		&f.restoreY,
+		&f.y,
+	)
 
 	f.inTx = true
 }
@@ -280,27 +289,47 @@ func (f *Fpdf) RollbackTx() {
 		return
 	}
 
-	copyTxBuffers(&f.buffer, &f.restoreBuffer, &f.pages, &f.restorePages)
+	copyTxBuffers(
+		&f.buffer,
+		&f.restoreBuffer,
+		&f.pages,
+		&f.restorePages,
+		&f.x,
+		&f.restoreX,
+		&f.y,
+		&f.restoreY,
+	)
 
 	f.page = len(f.pages) - 1
 	f.inTx = false
 }
 
-// coptyTxBuffers is generic to copy values; don't bother checking for nil
+// copyTxBuffers is generic to copy values; don't bother checking for nil
 // pointers since it is only called from BeginTx and RollbackTx so it should
 // not happen.
-func copyTxBuffers(dst1, src1 *fmtBuffer, dst2, src2 *[]*bytes.Buffer) {
+func copyTxBuffers(
+	bufferDst,
+	bufferSrc *fmtBuffer,
+	pagesDst,
+	pagesSrc *[]*bytes.Buffer,
+	xDst,
+	xSrc,
+	yDst,
+	ySrc *float64,
+) {
 
-	*dst1 = fmtBuffer{*bytes.NewBufferString(src1.String())}
-	*dst2 = make([]*bytes.Buffer, len(*src2))
-	for i, b := range *src2 {
+	*bufferDst = fmtBuffer{*bytes.NewBufferString(bufferSrc.String())}
+	*pagesDst = make([]*bytes.Buffer, len(*pagesSrc))
+	for i, b := range *pagesSrc {
 		// If pages are one based, the first might be nil, so continue
 		if b == nil {
 			continue
 		}
 
-		(*dst2)[i] = bytes.NewBufferString(b.String())
+		(*pagesDst)[i] = bytes.NewBufferString(b.String())
 	}
+
+	*xDst, *yDst = *xSrc, *ySrc
 }
 
 // ClearError unsets the internal Fpdf error. This method should be used with

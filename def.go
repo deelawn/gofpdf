@@ -534,6 +534,8 @@ type Fpdf struct {
 	bMargin          float64                    // page break margin
 	cMargin          float64                    // cell margin
 	x, y             float64                    // current position in user unit
+	restoreX         float64                    // x is restored from this in a tx rollback
+	restoreY         float64                    // y is restored from this in a tx rollback
 	lasth            float64                    // height of last printed cell
 	lineWidth        float64                    // line width in user unit
 	fontpath         string                     // path containing fonts
